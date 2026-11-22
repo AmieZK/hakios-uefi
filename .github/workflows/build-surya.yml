@@ -1,0 +1,40 @@
+name: Build HakiOS U-Boot for surya
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu bison flex libssl-dev python3
+
+      - name: Clone SM7150 U-Boot
+        run: git clone --depth 1 https://github.com/sm7150-mainline/u-boot.git ub
+
+      - name: Apply HakiOS patch
+        run: cd ub && patch -p1 --fuzz=3 --forward < ../u-boot/patches/hakios.patch
+
+      - name: Copy HakiOS U-Boot files
+        run: cp -R u-boot/files/. ub/
+
+      - name: Configure
+        run: |
+          cd ub
+          make qcom_defconfig CROSS_COMPILE=aarch64-linux-gnu-
+          ./scripts/config --file .config -e CMD_HAKIOS -e EFI_HAKIOS_USB_DEVICE -e CMD_BOOTEFI -e EFI_LOADER -e LMB
+          make olddefconfig CROSS_COMPILE=aarch64-linux-gnu-
+
+      - name: Build
+        run: make -C ub -j$(nproc) CROSS_COMPILE=aarch64-linux-gnu-
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: u-boot-surya-hakios
+          path: ub/u-boot.bin
