@@ -33,8 +33,14 @@ jobs:
       - name: Build
         run: make -C ub -j$(nproc) CROSS_COMPILE=aarch64-linux-gnu-
 
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: u-boot-surya-hakios
-          path: ub/u-boot.bin
+      - name: Publish binary to artifacts branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp ub/u-boot.bin u-boot-surya-hakios.bin
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan artifacts
+          git add -f u-boot-surya-hakios.bin
+          git commit -m "U-Boot surya HakiOS binary"
+          git push -f origin artifacts
