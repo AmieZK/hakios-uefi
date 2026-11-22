@@ -12,7 +12,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq gcc-aarch64-linux-gnu bison flex libssl-dev python3
+          sudo apt-get install -y -qq gcc-aarch64-linux-gnu bison flex libssl-dev libgnutls28-dev python3
 
       - name: Clone SM7150 U-Boot
         run: git clone --depth 1 https://github.com/sm7150-mainline/u-boot.git ub
